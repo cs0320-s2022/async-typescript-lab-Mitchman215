@@ -1,31 +1,66 @@
 // TODO: select the list element where the suggestions should go, and all three dropdown elements
 //  HINT: look at the HTML
+const sunSelector = document.getElementById('sun') as HTMLSelectElement;
+sunSelector.addEventListener("change", () => {
+  postAndUpdate()
+})
+
+const moonSelector = document.getElementById('moon') as HTMLSelectElement;
+moonSelector.addEventListener("change", () => {
+  postAndUpdate()
+})
+
+const risingSelector = document.getElementById('rising') as HTMLSelectElement;
+risingSelector.addEventListener("change", () => {
+  postAndUpdate()
+})
 
 // Here, when the value of sun is changed, we will call the method postAndUpdate.
 // TODO: Do the same for moon and rising
 
 // TODO: Define a type for the request data object here.
-// type MatchesRequestData = {}
+type MatchesRequestData = {
+  sun: string,
+  moon: string,
+  rising: string
+}
 
 // TODO: Define a type for the response data object here.
-// type Matches = {}
+type Matches = {
+  [key:string] : string[]
+}
 
 function postAndUpdate(): void {
   // TODO: empty the suggestionList (you want new suggestions each time someone types something new)
   //  HINT: use .innerHTML
+  // @ts-ignore
+  document.getElementById('suggestions').innerHTML = ""
 
   // TODO: add a type annotation to make this of type MatchesRequestData
-  const postParameters = {
+  const postParameters: MatchesRequestData = {
     // TODO: get the text inside the input box
     //  HINT: use sun.value to get the value of the sun field, for example
+    sun: sunSelector.value,
+    moon: moonSelector.value,
+    rising: risingSelector.value
   };
 
   console.log(postParameters)
 
-  // TODO: make a POST request using fetch to the URL to handle this request you set in your Main.java
+  // TODO: make a POST request using fetch to the URL to handle this request you sent in your Main.java
   //  HINT: check out the POST REQUESTS section of the lab and of the front-end guide.
   //  Make sure you add "Access-Control-Allow-Origin":"*" to your headers.
   //  Remember to add a type annotation for the response data using the Matches type you defined above!
+  fetch("http://localhost:4567/results", {
+    method: 'post',
+    body: JSON.stringify(postParameters),
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      "Access-Control-Allow-Origin":"*"
+    }
+  })
+      .then((response) => response.json())
+      .then((data: Matches) => updateSuggestions(data["data"]))
 
   // TODO: Call and fill in the updateSuggestions method in one of the .then statements in the Promise
   //  Parse the JSON in the response object
@@ -38,6 +73,11 @@ function updateSuggestions(matches: string[]): void {
   //  NOTE: you should use <li> (list item) tags to wrap each element. When you do so,
   //  make sure to add the attribute 'tabindex="0"' (for example: <li tabindex="0">{your element}</li>).
   //  This makes each element selectable via screen reader.
+  const suggestionList = document.getElementById('suggestions') as HTMLElement;
+
+  for (let match of matches) {
+    suggestionList.innerHTML += `<li tabindex="0">${match}</li>`
+  }
 }
 
 // TODO: create an event listener to the document (document.addEventListener) that detects "keyup".
@@ -45,13 +85,15 @@ function updateSuggestions(matches: string[]): void {
 //  values for the sun, moon, and rising using updateValues. Then call postAndUpdate().
 //  HINT: the listener callback function should be asynchronous and wait until the values are
 //  updated before calling postAndUpdate().
+document.addEventListener("keyup", () => updateValues('Scorpio', 'Libra', 'Virgo')
+    .then(() => postAndUpdate()))
 
 async function updateValues(sunval: string, moonval: string, risingval: string): Promise<void>{
   // This line asynchronously waits 1 second before updating the values.
   // It's unnecessary here, but it simulates asynchronous behavior you often have to account for.
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  sun.value = sunval;
-  moon.value = moonval;
-  rising.value = risingval;
+  sunSelector.value = sunval;
+  moonSelector.value = moonval;
+  risingSelector.value = risingval;
 }
